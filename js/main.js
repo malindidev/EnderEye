@@ -3,6 +3,7 @@ import { normalizeAddress } from "./validation.js";
 import { copyText } from "./clipboard.js";
 import { loadRecent, saveRecent, clearRecent } from "./storage.js";
 import { AppError } from "./errors.js";
+import { initBackground } from "./background.js";
 import * as ui from "./ui.js";
 
 const { els } = ui;
@@ -100,6 +101,8 @@ function handleClearRecent() {
 }
 
 function init() {
+  initBackground(document.getElementById("particles"));
+
   els.form.addEventListener("submit", handleSubmit);
   els.input.addEventListener("input", ui.clearInvalidInput);
   els.copy.addEventListener("click", handleCopy);
