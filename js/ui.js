@@ -7,6 +7,7 @@ export const els = {
   form: $("search-form"),
   input: $("address"),
   submit: $("submit-btn"),
+  themeToggle: $("theme-toggle"),
   recent: $("recent"),
   recentList: $("recent-list"),
   recentClear: $("recent-clear"),
@@ -24,6 +25,7 @@ export const els = {
   address: $("server-address"),
   copy: $("copy-btn"),
   copyLabel: document.querySelector("#copy-btn .copy-label"),
+  share: $("share-btn"),
   refresh: $("refresh-btn"),
   playersOnline: $("players-online"),
   playersMax: $("players-max"),
@@ -38,6 +40,7 @@ export const els = {
   playerList: $("player-list"),
   editionTag: $("edition-tag"),
   checkedAt: $("checked-at"),
+  sourceNote: $("source-note"),
   toast: $("toast")
 };
 
@@ -92,7 +95,7 @@ export function flashCopied(success) {
   clearTimeout(copyTimer);
   els.copy.classList.toggle("copied", success);
   els.copyLabel.textContent = success ? "Copied" : "Failed";
-  showToast(success ? "Server address copied to clipboard" : "Copy failed. Select the address manually.");
+  showToast(success ? "Server address copied" : "Copy failed. Select the address manually.");
   copyTimer = setTimeout(() => {
     els.copy.classList.remove("copied");
     els.copyLabel.textContent = "Copy";
@@ -111,8 +114,8 @@ function renderIcon(icon) {
   }
 }
 
-function renderPlayers(result) {
-  const { online, max, list } = result.players;
+function renderPlayers(players) {
+  const { online, max, list } = players;
   els.playersOnline.textContent = online.toLocaleString();
   els.playersMax.textContent = max.toLocaleString();
 
@@ -141,6 +144,15 @@ function renderPlayers(result) {
   els.playerList.appendChild(fragment);
 }
 
+function renderOfflineMessage(edition) {
+  const other = edition === "bedrock" ? "Java" : "Bedrock";
+  els.motd.replaceChildren();
+  const note = document.createElement("span");
+  note.className = "empty";
+  note.textContent = `This server is offline or could not be reached. Check the address, or try the ${other} edition.`;
+  els.motd.appendChild(note);
+}
+
 export function renderStatus(result) {
   els.status.dataset.state = result.online ? "online" : "offline";
   els.host.textContent = result.host;
@@ -148,12 +160,13 @@ export function renderStatus(result) {
   els.badge.className = `badge ${result.online ? "online" : "offline"}`;
   els.statusText.textContent = result.online ? "Online" : "Offline";
   els.editionTag.textContent = result.edition === "bedrock" ? "Bedrock Edition" : "Java Edition";
-  els.checkedAt.textContent = `Checked at ${result.checkedAt.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" })}`;
+  els.checkedAt.textContent = `Checked ${result.checkedAt.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" })}`;
+  els.sourceNote.textContent = `via ${result.provider}`;
 
   renderIcon(result.online ? result.icon : null);
 
   if (result.online) {
-    renderPlayers(result);
+    renderPlayers(result.players);
     els.latencyValue.textContent = result.latency.ms.toLocaleString();
     els.latencyBars.dataset.level = result.latency.level;
     els.latencyNote.textContent = `${result.latency.note}, measured to the status service`;
@@ -161,14 +174,13 @@ export function renderStatus(result) {
     els.protocol.textContent = [result.software, result.protocol ? `Protocol ${result.protocol}` : ""].filter(Boolean).join(" | ");
     renderMotd(els.motd, result.motd);
   } else {
-    renderPlayers({ players: { online: 0, max: 0, list: [] } });
+    renderPlayers({ online: 0, max: 0, list: [] });
     els.latencyValue.textContent = "0";
     els.latencyBars.dataset.level = "none";
     els.latencyNote.textContent = "No response from server";
     els.version.textContent = "Unavailable";
     els.protocol.textContent = "";
-    renderMotd(els.motd, { raw: [], clean: [] });
-    els.motd.textContent = "This server is offline or could not be reached. Check the address and edition, then try again.";
+    renderOfflineMessage(result.edition);
   }
 
   showPanel("status");
