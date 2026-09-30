@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="EnderEye checks the live status of any Minecraft Java or Bedrock server.">
+  <meta name="theme-color" content="#0b0714">
+  <title>EnderEye | Minecraft Server Status</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%230b0714'/%3E%3Ccircle cx='16' cy='16' r='8' fill='%23a855f7'/%3E%3Ccircle cx='16' cy='16' r='3' fill='%230b0714'/%3E%3C/svg%3E">
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+  <div class="backdrop" aria-hidden="true">
+    <span class="orb orb-a"></span>
+    <span class="orb orb-b"></span>
+    <span class="grid"></span>
+  </div>
+
+  <header class="site-header">
+    <a class="brand" href="./" aria-label="EnderEye home">
+      <svg class="brand-mark" viewBox="0 0 32 32" aria-hidden="true">
+        <defs>
+          <radialGradient id="eyeGlow" cx="50%" cy="50%" r="50%">
+            <stop offset="0%" stop-color="#e9d5ff"/>
+            <stop offset="55%" stop-color="#a855f7"/>
+            <stop offset="100%" stop-color="#6d28d9"/>
+          </radialGradient>
+        </defs>
+        <path d="M2 16C6 8 11 5 16 5s10 3 14 11c-4 8-9 11-14 11S6 24 2 16z" fill="url(#eyeGlow)"/>
+        <ellipse cx="16" cy="16" rx="3" ry="6" fill="#0b0714"/>
+      </svg>
+      <span class="brand-name">Ender<strong>Eye</strong></span>
+    </a>
+  </header>
+
+  <main class="container">
+    <section class="hero">
+      <h1>See any server. <span class="accent">Instantly.</span></h1>
+      <p>Live status for Minecraft Java and Bedrock servers, one address away.</p>
+    </section>
+
+    <form id="search-form" class="search glass" novalidate>
+      <div class="edition" role="radiogroup" aria-label="Server edition">
+        <input type="radio" id="edition-java" name="edition" value="java" checked>
+        <label for="edition-java">Java</label>
+        <input type="radio" id="edition-bedrock" name="edition" value="bedrock">
+        <label for="edition-bedrock">Bedrock</label>
+      </div>
+      <div class="field">
+        <svg class="field-icon" viewBox="0 0 24 24" aria-hidden="true">
+          <circle cx="11" cy="11" r="7" fill="none" stroke="currentColor" stroke-width="2"/>
+          <path d="M20 20l-4-4" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+        </svg>
+        <input id="address" name="address" type="text" inputmode="url" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="play.example.net or 192.0.2.1:25565" aria-label="Server address" required>
+      </div>
+      <button id="submit-btn" class="btn btn-primary" type="submit">
+        <span class="btn-label">Check status</span>
+        <span class="btn-spinner" aria-hidden="true"></span>
+      </button>
+    </form>
+
+    <div id="recent" class="recent" hidden>
+      <span class="recent-title">Recent</span>
+      <div id="recent-list" class="recent-list"></div>
+      <button id="recent-clear" class="link-btn" type="button">Clear</button>
+    </div>
+
+    <section id="results" class="results" aria-live="polite">
+      <div id="loading" class="card glass" hidden>
+        <div class="skeleton-row">
+          <span class="skeleton skeleton-icon"></span>
+          <div class="skeleton-col">
+            <span class="skeleton skeleton-line w60"></span>
+            <span class="skeleton skeleton-line w35"></span>
+          </div>
+        </div>
+        <div class="stats">
+          <span class="skeleton skeleton-stat"></span>
+          <span class="skeleton skeleton-stat"></span>
+          <span class="skeleton skeleton-stat"></span>
+        </div>
+        <span class="skeleton skeleton-motd"></span>
+      </div>
+
+      <div id="error" class="card glass error-card" role="alert" hidden>
+        <svg class="error-icon" viewBox="0 0 24 24" aria-hidden="true">
+          <circle cx="12" cy="12" r="10" fill="none" stroke="currentColor" stroke-width="2"/>
+          <path d="M12 7v6M12 16.5v.5" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+        </svg>
+        <div>
+          <h2 id="error-title">Something went wrong</h2>
+          <p id="error-message"></p>
+        </div>
+        <button id="error-retry" class="btn btn-ghost" type="button">Try again</button>
+      </div>
+
+      <article id="status" class="card glass" hidden>
+        <header class="status-head">
+          <div class="icon-wrap">
+            <img id="server-icon" class="server-icon" alt="" width="72" height="72" hidden>
+            <span id="server-icon-fallback" class="server-icon-fallback" aria-hidden="true"></span>
+          </div>
+          <div class="identity">
+            <div class="identity-row">
+              <h2 id="server-host" class="server-host"></h2>
+              <span id="status-badge" class="badge"><span class="dot"></span><span id="status-text"></span></span>
+            </div>
+            <div class="address-row">
+              <code id="server-address" class="address"></code>
+              <button id="copy-btn" class="btn btn-copy" type="button" aria-label="Copy server address">
+                <svg class="icon-copy" viewBox="0 0 24 24" aria-hidden="true">
+                  <rect x="9" y="9" width="11" height="11" rx="2" fill="none" stroke="currentColor" stroke-width="2"/>
+                  <path d="M5 15V6a2 2 0 0 1 2-2h9" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                </svg>
+                <svg class="icon-check" viewBox="0 0 24 24" aria-hidden="true">
+                  <path d="M5 12.5l4.5 4.5L19 7.5" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+                <span class="copy-label">Copy</span>
+              </button>
+            </div>
+          </div>
+          <button id="refresh-btn" class="btn btn-ghost btn-icon" type="button" aria-label="Refresh status">
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M20 12a8 8 0 1 1-2.5-5.8M20 4v5h-5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </button>
+        </header>
+
+        <div class="stats">
+          <div class="stat">
+            <span class="stat-label">Players</span>
+            <span class="stat-value"><span id="players-online">0</span><span class="stat-muted"> / <span id="players-max">0</span></span></span>
+            <span class="meter" aria-hidden="true"><span id="players-meter" class="meter-fill"></span></span>
+          </div>
+          <div class="stat">
+            <span class="stat-label">Latency</span>
+            <span class="stat-value"><span id="latency-value">0</span><span class="stat-muted"> ms</span></span>
+            <span id="latency-bars" class="bars" data-level="good" aria-hidden="true"><i></i><i></i><i></i><i></i></span>
+            <span id="latency-note" class="stat-note"></span>
+          </div>
+          <div class="stat">
+            <span class="stat-label">Version</span>
+            <span id="version-value" class="stat-value stat-text"></span>
+            <span id="protocol-note" class="stat-note"></span>
+          </div>
+        </div>
+
+        <section class="motd-block">
+          <h3 class="section-title">Message of the day</h3>
+          <div id="motd" class="motd"></div>
+        </section>
+
+        <section id="player-section" class="player-section" hidden>
+          <h3 class="section-title">Online players</h3>
+          <ul id="player-list" class="player-list"></ul>
+        </section>
+
+        <footer class="status-foot">
+          <span id="edition-tag" class="tag"></span>
+          <span id="checked-at" class="foot-note"></span>
+        </footer>
+      </article>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <p>Data provided by <a href="https://mcsrvstat.us" target="_blank" rel="noopener noreferrer">mcsrvstat.us</a>. EnderEye is not affiliated with Mojang or Microsoft.</p>
+  </footer>
+
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
+
+  <script type="module" src="js/main.js"></script>
+</body>
+</html>
