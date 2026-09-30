@@ -4,42 +4,48 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="description" content="EnderEye checks the live status of any Minecraft Java or Bedrock server.">
-  <meta name="theme-color" content="#0b0714">
+  <meta name="theme-color" content="#07050d">
+  <meta property="og:title" content="EnderEye | Minecraft Server Status">
+  <meta property="og:description" content="Live status for any Minecraft Java or Bedrock server.">
+  <meta property="og:image" content="img/endereye.png">
   <title>EnderEye | Minecraft Server Status</title>
-  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%230b0714'/%3E%3Ccircle cx='16' cy='16' r='8' fill='%23a855f7'/%3E%3Ccircle cx='16' cy='16' r='3' fill='%230b0714'/%3E%3C/svg%3E">
+  <link rel="icon" type="image/png" href="img/endereye.png">
+  <link rel="apple-touch-icon" href="img/endereye.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Space+Grotesk:wght@400;500;600;700&display=swap">
   <link rel="stylesheet" href="css/styles.css">
 </head>
 <body>
   <div class="backdrop" aria-hidden="true">
-    <span class="orb orb-a"></span>
-    <span class="orb orb-b"></span>
-    <span class="grid"></span>
+    <span class="portal"></span>
+    <span class="vignette"></span>
+    <canvas id="particles" class="particles"></canvas>
   </div>
 
   <header class="site-header">
-    <a class="brand" href="./" aria-label="EnderEye home">
-      <svg class="brand-mark" viewBox="0 0 32 32" aria-hidden="true">
-        <defs>
-          <radialGradient id="eyeGlow" cx="50%" cy="50%" r="50%">
-            <stop offset="0%" stop-color="#e9d5ff"/>
-            <stop offset="55%" stop-color="#a855f7"/>
-            <stop offset="100%" stop-color="#6d28d9"/>
-          </radialGradient>
-        </defs>
-        <path d="M2 16C6 8 11 5 16 5s10 3 14 11c-4 8-9 11-14 11S6 24 2 16z" fill="url(#eyeGlow)"/>
-        <ellipse cx="16" cy="16" rx="3" ry="6" fill="#0b0714"/>
-      </svg>
-      <span class="brand-name">Ender<strong>Eye</strong></span>
-    </a>
+    <div class="header-inner glass">
+      <a class="brand" href="./" aria-label="EnderEye home">
+        <img class="brand-logo" src="img/endereye.png" alt="" width="36" height="36">
+        <span class="brand-name">Ender<strong>Eye</strong></span>
+      </a>
+      <a class="header-link" href="https://github.com/malindidev" target="_blank" rel="noopener noreferrer">
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <path fill="currentColor" d="M12 .5a11.5 11.5 0 0 0-3.64 22.41c.58.1.79-.25.79-.56v-2c-3.2.7-3.87-1.36-3.87-1.36-.52-1.33-1.28-1.69-1.28-1.69-1.05-.71.08-.7.08-.7 1.15.08 1.76 1.19 1.76 1.19 1.03 1.76 2.69 1.25 3.35.96.1-.75.4-1.25.73-1.54-2.55-.29-5.24-1.28-5.24-5.68 0-1.26.45-2.28 1.19-3.09-.12-.29-.52-1.47.11-3.06 0 0 .97-.31 3.17 1.18a11 11 0 0 1 5.77 0c2.2-1.49 3.17-1.18 3.17-1.18.63 1.59.23 2.77.11 3.06.74.81 1.19 1.83 1.19 3.09 0 4.41-2.69 5.39-5.25 5.67.41.36.78 1.06.78 2.14v3.17c0 .31.21.67.8.56A11.5 11.5 0 0 0 12 .5z"/>
+        </svg>
+        <span>GitHub</span>
+      </a>
+    </div>
   </header>
 
   <main class="container">
     <section class="hero">
-      <h1>See any server. <span class="accent">Instantly.</span></h1>
-      <p>Live status for Minecraft Java and Bedrock servers, one address away.</p>
+      <span class="eyebrow"><i></i>Live server status</span>
+      <h1>Look into the <span class="accent">End</span> of any server.</h1>
+      <p>Check Minecraft Java and Bedrock servers in a single glance: players, latency, version and MOTD.</p>
     </section>
 
-    <form id="search-form" class="search glass" novalidate>
+    <form id="search-form" class="search" novalidate>
       <div class="edition" role="radiogroup" aria-label="Server edition">
         <input type="radio" id="edition-java" name="edition" value="java" checked>
         <label for="edition-java">Java</label>
@@ -97,7 +103,7 @@
       <article id="status" class="card glass" hidden>
         <header class="status-head">
           <div class="icon-wrap">
-            <img id="server-icon" class="server-icon" alt="" width="72" height="72" hidden>
+            <img id="server-icon" class="server-icon" alt="" width="88" height="88" hidden>
             <span id="server-icon-fallback" class="server-icon-fallback" aria-hidden="true"></span>
           </div>
           <div class="identity">
@@ -128,18 +134,36 @@
 
         <div class="stats">
           <div class="stat">
-            <span class="stat-label">Players</span>
+            <div class="stat-top">
+              <span class="stat-label">Players</span>
+              <svg class="stat-icon" viewBox="0 0 24 24" aria-hidden="true">
+                <circle cx="9" cy="8" r="3.2" fill="none" stroke="currentColor" stroke-width="1.8"/>
+                <path d="M2.8 20c.6-3.6 3-5.4 6.2-5.4s5.6 1.8 6.2 5.4" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+                <path d="M16 5.2a3 3 0 0 1 0 5.6M18.4 14.9c1.6.7 2.6 2.3 2.9 4.6" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+              </svg>
+            </div>
             <span class="stat-value"><span id="players-online">0</span><span class="stat-muted"> / <span id="players-max">0</span></span></span>
             <span class="meter" aria-hidden="true"><span id="players-meter" class="meter-fill"></span></span>
           </div>
           <div class="stat">
-            <span class="stat-label">Latency</span>
+            <div class="stat-top">
+              <span class="stat-label">Latency</span>
+              <svg class="stat-icon" viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M3 13h4l2.5-7 4 12 2.5-5H21" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+            </div>
             <span class="stat-value"><span id="latency-value">0</span><span class="stat-muted"> ms</span></span>
             <span id="latency-bars" class="bars" data-level="good" aria-hidden="true"><i></i><i></i><i></i><i></i></span>
             <span id="latency-note" class="stat-note"></span>
           </div>
           <div class="stat">
-            <span class="stat-label">Version</span>
+            <div class="stat-top">
+              <span class="stat-label">Version</span>
+              <svg class="stat-icon" viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M12 3l8 4.5v9L12 21l-8-4.5v-9L12 3z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/>
+                <path d="M4.5 7.7L12 12l7.5-4.3M12 12v8.5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/>
+              </svg>
+            </div>
             <span id="version-value" class="stat-value stat-text"></span>
             <span id="protocol-note" class="stat-note"></span>
           </div>
@@ -164,7 +188,15 @@
   </main>
 
   <footer class="site-footer">
-    <p>Data provided by <a href="https://mcsrvstat.us" target="_blank" rel="noopener noreferrer">mcsrvstat.us</a>. EnderEye is not affiliated with Mojang or Microsoft.</p>
+    <div class="footer-inner">
+      <a class="credit" href="https://github.com/malindidev" target="_blank" rel="noopener noreferrer">
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <path fill="currentColor" d="M12 .5a11.5 11.5 0 0 0-3.64 22.41c.58.1.79-.25.79-.56v-2c-3.2.7-3.87-1.36-3.87-1.36-.52-1.33-1.28-1.69-1.28-1.69-1.05-.71.08-.7.08-.7 1.15.08 1.76 1.19 1.76 1.19 1.03 1.76 2.69 1.25 3.35.96.1-.75.4-1.25.73-1.54-2.55-.29-5.24-1.28-5.24-5.68 0-1.26.45-2.28 1.19-3.09-.12-.29-.52-1.47.11-3.06 0 0 .97-.31 3.17 1.18a11 11 0 0 1 5.77 0c2.2-1.49 3.17-1.18 3.17-1.18.63 1.59.23 2.77.11 3.06.74.81 1.19 1.83 1.19 3.09 0 4.41-2.69 5.39-5.25 5.67.41.36.78 1.06.78 2.14v3.17c0 .31.21.67.8.56A11.5 11.5 0 0 0 12 .5z"/>
+        </svg>
+        <span>Designed and built by <strong>malindidev</strong></span>
+      </a>
+      <p class="fine">Status data by <a href="https://mcsrvstat.us" target="_blank" rel="noopener noreferrer">mcsrvstat.us</a>. EnderEye is not affiliated with Mojang or Microsoft.</p>
+    </div>
   </footer>
 
   <div id="toast" class="toast" role="status" aria-live="polite"></div>
