@@ -3,7 +3,7 @@ import { normalizeAddress } from "./validation.js";
 import { copyText } from "./clipboard.js";
 import { loadRecent, saveRecent, clearRecent } from "./storage.js";
 import { AppError } from "./errors.js";
-import { initBackground } from "./background.js";
+import { initTheme } from "./theme.js";
 import * as ui from "./ui.js";
 
 const { els } = ui;
@@ -24,11 +24,17 @@ function setEdition(value) {
   if (target) target.checked = true;
 }
 
-function syncUrl(address, edition) {
+function buildShareUrl(address, edition) {
   const url = new URL(window.location.href);
+  url.search = "";
+  url.hash = "";
   url.searchParams.set("server", address);
   url.searchParams.set("edition", edition);
-  window.history.replaceState(null, "", url);
+  return url.toString();
+}
+
+function syncUrl(address, edition) {
+  window.history.replaceState(null, "", buildShareUrl(address, edition));
 }
 
 async function runCheck(rawAddress, edition) {
@@ -87,6 +93,12 @@ async function handleCopy() {
   ui.flashCopied(success);
 }
 
+async function handleShare() {
+  if (!state.current) return;
+  const success = await copyText(buildShareUrl(state.current.address, state.current.edition));
+  ui.showToast(success ? "Shareable link copied" : "Could not copy the link");
+}
+
 function handleRefresh() {
   if (state.current) runCheck(state.current.address, state.current.edition);
 }
@@ -100,15 +112,26 @@ function handleClearRecent() {
   ui.renderRecent([], handleRecentSelect);
 }
 
+function handleShortcut(event) {
+  if (event.key !== "/" || event.ctrlKey || event.metaKey || event.altKey) return;
+  const tag = document.activeElement ? document.activeElement.tagName : "";
+  if (tag === "INPUT" || tag === "TEXTAREA") return;
+  event.preventDefault();
+  els.input.focus();
+  els.input.select();
+}
+
 function init() {
-  initBackground(document.getElementById("particles"));
+  initTheme(els.themeToggle);
 
   els.form.addEventListener("submit", handleSubmit);
   els.input.addEventListener("input", ui.clearInvalidInput);
   els.copy.addEventListener("click", handleCopy);
+  els.share.addEventListener("click", handleShare);
   els.refresh.addEventListener("click", handleRefresh);
   els.errorRetry.addEventListener("click", handleRetry);
   els.recentClear.addEventListener("click", handleClearRecent);
+  document.addEventListener("keydown", handleShortcut);
 
   ui.renderRecent(loadRecent(), handleRecentSelect);
 
